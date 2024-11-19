@@ -75,13 +75,13 @@ class _TaskTrackerState extends State<TaskTracker> {
 
   Future<void> _showAllTaskList() async {
     try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('tasks').get();
-      List<QueryDocumentSnapshot> taskList = querySnapshot.docs;
+      QuerySnapshot querySnap = await FirebaseFirestore.instance.collection('tasks').get();
+      List<QueryDocumentSnapshot> taskList = querySnap.docs;
 
       _showTaskDialog(taskList);
     } catch (e) {
       setState(() {
-        _statusMessage = 'Error retrieving tasks: $e';
+        _statusMessage = 'Unable to retreive tasks: $e';
       });
     }
   }
@@ -128,11 +128,11 @@ class _TaskTrackerState extends State<TaskTracker> {
     try {
       await FirebaseFirestore.instance.collection('tasks').doc(taskId).delete();
       setState(() {
-        _statusMessage = 'Task deleted successfully.';
+        _statusMessage = 'Successfully Deleted';
       });
     } catch (e) {
       setState(() {
-        _statusMessage = 'Error deleting task: $e';
+        _statusMessage = 'Unable to delete task: $e';
       });
     }
   }
@@ -156,7 +156,7 @@ class _TaskTrackerState extends State<TaskTracker> {
       _showSearchResults(querySnapshot.docs);
     } catch (e) {
       setState(() {
-        _statusMessage = 'Error searching tasks: $e';
+        _statusMessage = 'Unable to search tasks $e';
       });
     }
   }
