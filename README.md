@@ -1,6 +1,6 @@
 ## MinuteMinder
 
-Time Tracking App
+__Time Tracking App__
 
 A simple time-tracking application to record and query time records.
 
