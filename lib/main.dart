@@ -8,85 +8,85 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MinuteMinderApp());
+  runApp(const TaskTrackerApp());
 }
 
-class MinuteMinderApp extends StatelessWidget {
-  const MinuteMinderApp({super.key});
+class TaskTrackerApp extends StatelessWidget {
+  const TaskTrackerApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Minute Minder',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
         useMaterial3: true,
       ),
-      home: const TaskManagerScreen(title: 'Minute Minder'),
+      home: const TaskTracker(title: 'Minute Minder'),
     );
   }
 }
 
-class TaskManagerScreen extends StatefulWidget {
-  const TaskManagerScreen({super.key, required this.title});
+class TaskTracker extends StatefulWidget {
+  const TaskTracker({super.key, required this.title});
   final String title;
 
   @override
-  State<TaskManagerScreen> createState() => _TaskManagerScreenState();
+  State<TaskTracker> createState() => _TaskTrackerState();
 }
 
-class _TaskManagerScreenState extends State<TaskManagerScreen> {
+class _TaskTrackerState extends State<TaskTracker> {
   // Task Input Controllers
-  final TextEditingController _dateController = TextEditingController();
-  final TextEditingController _startTimeController = TextEditingController();
-  final TextEditingController _endTimeController = TextEditingController();
-  final TextEditingController _taskController = TextEditingController();
-  final TextEditingController _tagsController = TextEditingController();
+  final TextEditingController _dateInputController = TextEditingController();
+  final TextEditingController _startTimeInputController = TextEditingController();
+  final TextEditingController _endTimeInputController = TextEditingController();
+  final TextEditingController _taskNameController = TextEditingController();
+  final TextEditingController _taskTagsController = TextEditingController();
 
   // Search Input Controllers
   final TextEditingController _searchDateController = TextEditingController();
-  final TextEditingController _searchTagsController = TextEditingController();
-  final TextEditingController _searchTaskController = TextEditingController();
+  final TextEditingController _searchTagController = TextEditingController();
+  final TextEditingController _searchNameController = TextEditingController();
 
   // Feedback Message
-  String _message = '';
+  String _statusMessage = '';
 
-  Future<void> _addTask() async {
+  Future<void> _addNewTask() async {
     try {
       DocumentReference newTaskRef = FirebaseFirestore.instance.collection('tasks').doc();
 
       await newTaskRef.set({
-        'date': _dateController.text,
-        'startTime': _startTimeController.text,
-        'endTime': _endTimeController.text,
-        'task': _taskController.text,
-        'tags': _tagsController.text,
+        'date': _dateInputController.text,
+        'startTime': _startTimeInputController.text,
+        'endTime': _endTimeInputController.text,
+        'task': _taskNameController.text,
+        'tags': _taskTagsController.text,
       });
 
       setState(() {
-        _message = 'Task added successfully: ${_taskController.text}';
+        _statusMessage = 'Task added: ${_taskNameController.text}';
       });
     } catch (e) {
       setState(() {
-        _message = 'Error adding task: $e';
+        _statusMessage = 'Error adding task: $e';
       });
     }
   }
 
-  Future<void> _showAllTasks() async {
+  Future<void> _showAllTaskList() async {
     try {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('tasks').get();
-      List<QueryDocumentSnapshot> tasks = querySnapshot.docs;
+      List<QueryDocumentSnapshot> taskList = querySnapshot.docs;
 
-      _showTaskListDialog(tasks);
+      _showTaskDialog(taskList);
     } catch (e) {
       setState(() {
-        _message = 'Error retrieving tasks: $e';
+        _statusMessage = 'Error retrieving tasks: $e';
       });
     }
   }
 
-  void _showTaskListDialog(List<QueryDocumentSnapshot> tasks) {
+  void _showTaskDialog(List<QueryDocumentSnapshot> tasks) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -102,11 +102,11 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                   title: Text(data['task'] ?? 'Unnamed Task'),
                   subtitle: Text('${data['date']} from ${data['startTime']} to ${data['endTime']} [Tags: ${data['tags']}]'),
                   trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
+                    icon: const Icon(Icons.delete, color: Colors.pink),
                     onPressed: () {
-                      _deleteTask(taskId);
+                      _removeTask(taskId);
                       Navigator.of(context).pop(); // Close the dialog
-                      _showAllTasks(); // Refresh the task list
+                      _showAllTaskList(); // Refresh the task list
                     },
                   ),
                 );
@@ -124,39 +124,39 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
     );
   }
 
-  Future<void> _deleteTask(String taskId) async {
+  Future<void> _removeTask(String taskId) async {
     try {
       await FirebaseFirestore.instance.collection('tasks').doc(taskId).delete();
       setState(() {
-        _message = 'Task deleted successfully.';
+        _statusMessage = 'Task deleted successfully.';
       });
     } catch (e) {
       setState(() {
-        _message = 'Error deleting task: $e';
+        _statusMessage = 'Error deleting task: $e';
       });
     }
   }
 
-  Future<void> _searchTasks() async {
+  Future<void> _searchForTasks() async {
     try {
       Query query = FirebaseFirestore.instance.collection('tasks');
 
       if (_searchDateController.text.isNotEmpty) {
         query = query.where('date', isEqualTo: _searchDateController.text);
       }
-      if (_searchTagsController.text.isNotEmpty) {
-        List<String> tags = _searchTagsController.text.split(',').map((tag) => tag.trim()).toList();
+      if (_searchTagController.text.isNotEmpty) {
+        List<String> tags = _searchTagController.text.split(',').map((tag) => tag.trim()).toList();
         query = query.where('tags', whereIn: tags);
       }
-      if (_searchTaskController.text.isNotEmpty) {
-        query = query.where('task', isEqualTo: _searchTaskController.text);
+      if (_searchNameController.text.isNotEmpty) {
+        query = query.where('task', isEqualTo: _searchNameController.text);
       }
 
       QuerySnapshot querySnapshot = await query.get();
       _showSearchResults(querySnapshot.docs);
     } catch (e) {
       setState(() {
-        _message = 'Error searching tasks: $e';
+        _statusMessage = 'Error searching tasks: $e';
       });
     }
   }
@@ -173,8 +173,7 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                 Map<String, dynamic> data = task.data() as Map<String, dynamic>;
                 return ListTile(
                   title: Text(data['task'] ?? 'Unnamed Task'),
-                  subtitle: Text(
-                      '${data['date']} from ${data['startTime']} to ${data['endTime']} [Tags: ${data['tags']}]'),
+                  subtitle: Text('${data['date']} from ${data['startTime']} to ${data['endTime']} [Tags: ${data['tags']}]'),
                 );
               }).toList(),
             ),
@@ -190,7 +189,7 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
     );
   }
 
-  void _showAddTaskDialog() {
+  void _showAddTaskForm() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -200,23 +199,23 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
             child: Column(
               children: [
                 TextField(
-                  controller: _dateController,
+                  controller: _dateInputController,
                   decoration: const InputDecoration(labelText: 'Date'),
                 ),
                 TextField(
-                  controller: _startTimeController,
+                  controller: _startTimeInputController,
                   decoration: const InputDecoration(labelText: 'Start Time'),
                 ),
                 TextField(
-                  controller: _endTimeController,
+                  controller: _endTimeInputController,
                   decoration: const InputDecoration(labelText: 'End Time'),
                 ),
                 TextField(
-                  controller: _taskController,
-                  decoration: const InputDecoration(labelText: 'Task'),
+                  controller: _taskNameController,
+                  decoration: const InputDecoration(labelText: 'Task Name'),
                 ),
                 TextField(
-                  controller: _tagsController,
+                  controller: _taskTagsController,
                   decoration: const InputDecoration(labelText: 'Tags'),
                 ),
               ],
@@ -229,7 +228,7 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                _addTask();
+                _addNewTask();
                 Navigator.of(context).pop();
               },
               child: const Text('Add Task'),
@@ -240,7 +239,7 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
     );
   }
 
-  void _showSearchTaskDialog() {
+  void _showSearchTaskForm() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -254,12 +253,12 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
                   decoration: const InputDecoration(labelText: 'Date'),
                 ),
                 TextField(
-                  controller: _searchTagsController,
+                  controller: _searchTagController,
                   decoration: const InputDecoration(labelText: 'Tags'),
                 ),
                 TextField(
-                  controller: _searchTaskController,
-                  decoration: const InputDecoration(labelText: 'Task'),
+                  controller: _searchNameController,
+                  decoration: const InputDecoration(labelText: 'Task Name'),
                 ),
               ],
             ),
@@ -272,7 +271,7 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                _searchTasks();
+                _searchForTasks();
               },
               child: const Text('Search'),
             ),
@@ -295,21 +294,21 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ElevatedButton(
-              onPressed: _showAllTasks,
+              onPressed: _showAllTaskList,
               child: const Text('Show All Tasks'),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _showAddTaskDialog,
+              onPressed: _showAddTaskForm,
               child: const Text('Add Task'),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _showSearchTaskDialog,
+              onPressed: _showSearchTaskForm,
               child: const Text('Search Tasks'),
             ),
             const SizedBox(height: 20),
-            Text(_message),
+            Text(_statusMessage),
           ],
         ),
       ),
