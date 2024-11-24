@@ -8,7 +8,7 @@ A simple time-tracking application to record and query time records.
 This application allows users to record and query time records. 
 - Users can create new records, and search for information based on date, task, or tag. 
 
-It contains the following files so far:
+It contains the following executable files so far:
 - main (main.dart)
 
 ### Features
