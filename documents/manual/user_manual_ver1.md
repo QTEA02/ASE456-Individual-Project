@@ -1,6 +1,4 @@
-Here's a user manual for the **Task Tracker Application**, written in Markdown format.
 
----
 
 # **Task Tracker User Manual**
 
