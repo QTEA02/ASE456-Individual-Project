@@ -1,0 +1,5 @@
+1. Factory Method
+2. MVVM
+3. Command Pattern
+4. Decorator Pattern
+5. Singleton
